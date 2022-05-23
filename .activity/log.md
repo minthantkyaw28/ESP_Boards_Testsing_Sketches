@@ -1,2 +1,1 @@
 # activity log
-<!-- chore: note 2022-05-23T09:15:18 -->
