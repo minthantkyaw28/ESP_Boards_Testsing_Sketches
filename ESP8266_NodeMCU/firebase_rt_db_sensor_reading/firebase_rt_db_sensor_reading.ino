@@ -9,6 +9,9 @@
 #include "addons/RTDBHelper.h"
 
 // Insert your network credentials
+// #define WIFI_SSID "GUSTO_209"
+// #define WIFI_PASSWORD "Gusto@123"
+
 #define WIFI_SSID "AYE AYE CHO"
 #define WIFI_PASSWORD "17041966"
 
@@ -27,6 +30,16 @@ FirebaseConfig config;
 unsigned long sendDataPrevMillis = 0;
 int count = 0;
 bool signupOK = false;
+
+
+const int sensorPin = A0;  // Analog pin connected to the turbidity sensor
+
+
+// Calibration data points (customize based on your own calibration data)
+const int numDataPoints = 5;
+const int sensorReadings[numDataPoints] = {0, 256, 512, 768, 1023};
+const float ntuValues[numDataPoints] = {0.0, 10.0, 50.0, 100.0, 200.0};
+String turbidityStatus = "";
 
 void setup(){
   Serial.begin(115200);
@@ -64,8 +77,26 @@ void setup(){
 }
 
 void loop(){
-  if (Firebase.ready() && signupOK && (millis() - sendDataPrevMillis > 1000 || sendDataPrevMillis == 0)){
+  if (Firebase.ready() && signupOK && (millis() - sendDataPrevMillis > 500 || sendDataPrevMillis == 0)){
     sendDataPrevMillis = millis();
+
+
+
+
+  int turbidityValue = analogRead(sensorPin);
+  float ntu = convertToNTU(turbidityValue);
+  //float ntu = turbidityValue * (1.0 / 1023.0);
+
+  if(ntu>=170){
+    turbidityStatus="Clean Water";
+    Serial.println("Turbidity (NTU): "+String(ntu)+" "+turbidityStatus);
+  }else{
+    turbidityStatus="Polluted Water";
+    Serial.println("Turbidity (NTU): "+String(ntu)+" "+turbidityStatus);
+  }
+  
+  //Serial.println("Turbidity Value : "+String(turbidityValue));
+  //delay(1000);  // Wait for 1 second before taking 
 
     // // Write an Int number on the database path test/int
     // if (Firebase.RTDB.setInt(&fbdo, "test/int", count)){
@@ -80,10 +111,10 @@ void loop(){
     // count++;
     
     // Write an Float data on the database path sensor_readings/turbidity_level
-    if (Firebase.RTDB.setFloat(&fbdo, "sensor_readings/turbidity_level", 0.01 + random(0,100))){
-      Serial.println("PASSED");
-      Serial.println("PATH: " + fbdo.dataPath());
-      Serial.println("TYPE: " + fbdo.dataType());
+    if (Firebase.RTDB.setString(&fbdo, "sensor_readings/turbidity_level",turbidityStatus)){
+      //Serial.println("PASSED");
+      //Serial.println("PATH: " + fbdo.dataPath());
+      //Serial.println("TYPE: " + fbdo.dataType());
     }
     else {
       Serial.println("FAILED");
@@ -93,9 +124,9 @@ void loop(){
 
      // Write an Float data on the database path sensor_readings/turbidity_level
     if (Firebase.RTDB.setFloat(&fbdo, "sensor_readings/ph_level", 0.01 + random(0,100))){
-      Serial.println("PASSED");
-      Serial.println("PATH: " + fbdo.dataPath());
-      Serial.println("TYPE: " + fbdo.dataType());
+      //Serial.println("PASSED");
+     //Serial.println("PATH: " + fbdo.dataPath());
+      //Serial.println("TYPE: " + fbdo.dataType());
     }
     else {
       Serial.println("FAILED");
@@ -103,4 +134,24 @@ void loop(){
     }
     
   }
+}
+
+
+float convertToNTU(int sensorReading) {
+  if (sensorReading <= sensorReadings[0])
+    return ntuValues[0];
+  else if (sensorReading >= sensorReadings[numDataPoints - 1])
+    return ntuValues[numDataPoints - 1];
+  
+  // Perform linear interpolation
+  for (int i = 0; i < numDataPoints - 1; i++) {
+    if (sensorReading >= sensorReadings[i] && sensorReading <= sensorReadings[i + 1]) {
+      float slope = (ntuValues[i + 1] - ntuValues[i]) / (sensorReadings[i + 1] - sensorReadings[i]);
+      float ntu = ntuValues[i] + slope * (sensorReading - sensorReadings[i]);
+      
+      return ntu;
+    }
+  }
+  
+  return 0.0;  // Default value if interpolation fails
 }
