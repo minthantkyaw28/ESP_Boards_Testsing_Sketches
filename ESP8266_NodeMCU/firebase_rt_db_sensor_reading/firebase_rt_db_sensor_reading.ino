@@ -9,11 +9,14 @@
 #include "addons/RTDBHelper.h"
 
 // Insert your network credentials
-// #define WIFI_SSID "GUSTO_209"
+#define WIFI_SSID "GUSTO_209"
+#define WIFI_PASSWORD "Gusto@123"
+
+//Insert your network credentials
+// #define WIFI_SSID "GUSTO WiFi"
 // #define WIFI_PASSWORD "Gusto@123"
 
-#define WIFI_SSID "AYE AYE CHO"
-#define WIFI_PASSWORD "17041966"
+
 
 // Insert Firebase project API Key
 #define API_KEY "AIzaSyAxHmTsjdZ-KCwiBOhzqPY2esib-s84FRA"
@@ -123,7 +126,7 @@ void loop(){
 
 
      // Write an Float data on the database path sensor_readings/turbidity_level
-    if (Firebase.RTDB.setFloat(&fbdo, "sensor_readings/ph_level", 0.01 + random(0,100))){
+    if (Firebase.RTDB.setFloat(&fbdo, "sensor_readings/ntu_level", ntu)){
       //Serial.println("PASSED");
      //Serial.println("PATH: " + fbdo.dataPath());
       //Serial.println("TYPE: " + fbdo.dataType());

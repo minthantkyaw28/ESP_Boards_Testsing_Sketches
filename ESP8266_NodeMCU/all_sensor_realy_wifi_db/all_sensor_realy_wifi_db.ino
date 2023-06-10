@@ -42,11 +42,11 @@ void run_motor_func(int motorRunTime){
 void water_lvl_func(){
 
   int sensorValue = analogRead(sensorPin); 
-  Serial.print("Sensor value: ");
+  //Serial.print("Sensor value: ");
 
   if (sensorValue >= 600) { // Water high
     
-    run_motor_func(2000);
+    run_motor_func(4000);
     Serial.println("Sensor value is = "+String(sensorValue)+" It is high !!!"); 
 
   }else { // Water low
